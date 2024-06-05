@@ -132,18 +132,20 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI=$CARGO_NET_GIT_FETCH_WITH_CLI
 # This is aiming at installing the `[tool.poetry.depdendencies]` from pyproject.toml.
 COPY --from=requirements /synapse/requirements.txt /synapse/
 RUN --mount=type=cache,target=/root/.cache/pip \
-  pip install --prefix="/install" --no-deps --no-warn-script-location -r /synapse/requirements.txt
+  pip install --prefix="/install" --no-deps --no-warn-script-location --no-cache-dir -r /synapse/requirements.txt
 
 # Install famedly required addons
 
+COPY synapse-token-authenticator /synapse-token-authenticator
 RUN --mount=type=cache,target=/root/.cache/pip \
-  pip install setuptools \
-  && pip install --prefix="/install" --no-warn-script-location synapse-token-authenticator==0.4.2 \
-  && pip install --prefix="/install" --no-warn-script-location synapse-s3-storage-provider \
-  && pip install --prefix="/install" --no-warn-script-location synapse-auto-accept-invite \
-  && pip install --prefix="/install" --no-warn-script-location synapse-invite-checker \
-  && pip install --prefix="/install" --no-warn-script-location git+https://github.com/famedly/synapse-invite-policies.git@main \
-  && pip install --prefix="/install" --no-warn-script-location git+https://github.com/famedly/synapse-domain-rule-checker.git@main
+  pip install --upgrade pip \
+  && pip install --no-cache-dir setuptools \
+  && pip install --no-cache-dir --prefix="/install" --no-warn-script-location synapse-token-authenticator/. \
+  && pip install --no-cache-dir --prefix="/install" --no-warn-script-location synapse-s3-storage-provider \
+  && pip install --no-cache-dir --prefix="/install" --no-warn-script-location synapse-auto-accept-invite \
+  && pip install --no-cache-dir --prefix="/install" --no-warn-script-location synapse-invite-checker \
+  && pip install --no-cache-dir --prefix="/install" --no-warn-script-location git+https://github.com/famedly/synapse-invite-policies.git@main \
+  && pip install --no-cache-dir --prefix="/install" --no-warn-script-location git+https://github.com/famedly/synapse-domain-rule-checker.git@main
 
 # Copy over the rest of the synapse source code.
 COPY synapse /synapse/synapse/
@@ -160,9 +162,9 @@ ARG TEST_ONLY_IGNORE_POETRY_LOCKFILE
 RUN --mount=type=cache,target=/synapse/target,sharing=locked \
   --mount=type=cache,target=${CARGO_HOME}/registry,sharing=locked \
   if [ -z "$TEST_ONLY_IGNORE_POETRY_LOCKFILE" ]; then \
-  pip install --prefix="/install" --no-deps --no-warn-script-location /synapse[all]; \
+  pip install --no-cache-dir --prefix="/install" --no-deps --no-warn-script-location /synapse[all]; \
   else \
-  pip install --prefix="/install" --no-warn-script-location /synapse[all]; \
+  pip install --no-cache-dir --prefix="/install" --no-warn-script-location /synapse[all]; \
   fi
 
 ###
